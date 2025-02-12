@@ -49,6 +49,13 @@ export default function Home() {
                         Safe and secure transactions powered by Stripe payment processing.
                     </p>
                 </div>
+
+                <div className="p-6 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
+                    <h3 className="text-xl font-semibold mb-2">Weather Forecasting</h3>
+                    <p className="text-muted-foreground">
+                        Stay informed with accurate 6-day weather predictions to better plan your farming activities.
+                    </p>
+                </div>
             </div>
         </div>
     );
