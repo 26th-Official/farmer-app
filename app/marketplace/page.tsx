@@ -149,7 +149,7 @@ export default function MarketplacePage() {
                     </p>
                 </div>
 
-                {products.length !== 0 ? (
+                {products.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <PackageSearch className="h-16 w-16 text-primary opacity-50 mb-4" />
                         <h4 className="font-semibold">No Products Available</h4>
