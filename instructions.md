@@ -1,0 +1,135 @@
+I want a extremly detailed prompt that i can provide to copilot to make a full stack application,
+This is basically a app that can help farmers cultivate crops with the help of ai and use the marketplace feature to post their products so that others can buy them.
+
+- Tech stack
+	- Nextjs (app router)
+	- database - sqlite (database operation can be done in the server side)
+	- frontend -shadcn
+	- payment - stripe (can be done on server side)
+	- LLM API - open AI (llm api action can be done in server side)
+	- icons - lucide icons
+	- css -tailwindcss
+
+- Database tables (sqlite)
+	- "users"
+		- email
+		- password
+		- earning
+	- "products"
+		- name
+		- quantity
+		- price
+		- email
+
+- I have already intialized next js project and shadcn in "/farmer-app" directory
+
+- this is features the app must have,
+	- Now the app must have these pages,
+		- home(public)
+		- signup(public)
+		- signup(public)
+		- marketplace(public)
+		- dashboard (private)
+	- Home Page ("/")
+		- This page just have some example content for now as We can work on this later.
+		- It must have a navbar, and it must contain the following,
+			- signup and Signin button (It must be in the right end of the navbar with some space between them)
+			- Left end must have a random icon from lucide
+			- at the center we must have 2 items,
+				- Marketplace (it must go to "/marketplace" route)
+				- Home (It must go to "/" route)
+	- signup page ("/signup")
+		- It must have a email field
+		- it must have a password field
+		- it must have a dropdown menu which must have 2 options,
+			- Farmer
+			- Customer (default)
+		- It must have a sign up button
+		- just do a basic validation for email and password no need for external modules just use forms basic features
+		- DATABASE instruction,
+			- When the user press signup, we must create a table in sqlite called "users" if it doesn't exist
+			- and we add the email, password and type of account (farmer or customer) in the table.
+		- after saving it in the table we redirect to "/signin" page
+	- signin page ("/signin")
+		- It must have a email field
+		- It must have a password field
+		- It must have a signin button
+		- just do a basic validation for email and password no need for external modules just use forms basic features
+		- DATABASE instruction,
+			- When the user presses the signin button we must use the data they typed in email and password field and search the "users" table we created and see if that entry exists, 
+				- If it does exist then we redirect the user to "/dashboard" if the user type Which we just retrieved from the sqllite is "farmer", if its "customer" we redirect to "/marketplace"
+				- If it does not exists at all, then we must redirect to "/signup"
+				- If it does exist but the password is wrong then we must show a error message above the signin button like "Invalid credentials, please try again"
+			- after successful signin right before redirect to the respective page we must add a 2 entry to local storage called "session" and "user"
+				- "session" must be set to "true"
+				- "user" must be set to "email" that we fetched from sqlite
+	- dashboard page ("/dashboard")
+		- This is a private page and it could only be accessed if,
+			- "session" value from local storage is "true"
+			- "user" value from the local storage is a valid "email" you can do a simple regex check.
+			- if these 2 conditions are not satisfied we must redirect to "/signup"
+		- this page have 3 parts for we will be use "flex-col" first and divide the page into 2 
+			- Navbar (10% height and 100% width)
+			- Rest (90% height and 100% width)
+				- we must now further divide this in to 2 as "flex"
+					- Sidebar (30% width and 100% height)
+					- main area (70% width and 100% height)
+		- this page must have these things,
+			- it must have a navbar
+				- it must show a logout button at the right end of the navbar
+					- when the logout button is pressed the "session" and "user" in the local storage must be set to "false" and "null"
+					- and should be redirect to "/signin" route
+			- It must have a sidebar which should have 2 items
+				- products (this should be clicked as default)
+				- chat
+			- In the space next to sidebar
+				- we must show the page we selected from the sidebar.
+				
+			- Products tab
+				- It must have a button called "add products"
+				- when that button is clicked a dialog must show and that dialog must have these options
+					- Name 
+					- Quantity (in kg) (positive integer)
+					- price (per kg) (positive integer)
+					- add product button
+				-  there is no need for any specifc input validation for now. just make sure that no field is left empty and the quantity and price are positive integers.
+				- DATABASE instructions,
+					- When the user presses the "add product" button we must create a new table called "products" if it doesn't exist already
+					- If it exists we must add the following data in the table
+						- Name (this data is from the form user just entered in the form)
+						- Quantity (this data is from the form user just entered in the form)
+						- Price (this data is from the form user just entered in the form)
+						- Email ( this is from the local storage "user" field)
+						- a unique product id
+				- now below the "add products" button we must render the items in the "products" table as cards.
+				- Now each cards must have these features, which we fetched from database table "products" for under the condition where the "email" is equal to the email found in the local storage in the "user".
+					- Name
+					- Quantity
+					- Price
+					- Delete button
+					- Edit button
+						- DATABASE instructions,
+							- When the user presses the edit button we must open a dialog box and display the items of the card as form and after the form is edited and we must update the particular product in the "products" table by using the unique id we and re-render the products cards section.
+							- When the user presses the delete button we must delete the product entry from the "products" table by using the unique id and re-render the products cards section.
+			- Chat tab
+				- this tab is used to communicate with the LLM Api to send and receive messages
+				- it must have a input field and a send button
+				- the sent messages must show in right side and received messages from llm should be on the left side.
+				- this must appear like a proper chat interface.
+				- whenever a user types a message it must be sent to the llm api and after receiving message back from llm we must display it on the left side.
+				- till we receive the message back from the llm the send button must be disabled.
+				- make sure the message displaying area is scrollable so that we can scroll and see the messages.
+				
+	- Marketplace page ("/marketplace")
+		- this page must display cards and render the items fetched from "products" table.
+		- each card must have the following data
+			- Name
+			- price
+			- seller email
+			- view button
+			- when the view button is pressed we must display a dialog which must show the details of the products like name price and we must have a field called quantity field where we can type the quantity we want but it must not exceed the quantity which we fetched from database table. the dialog must also have a buy button when pressed we must calculate the price with the quanity and use the stripe api to lead the customer to buy that.
+			- make a success and failure page as well so that the buyer's purchase can be acknowledged. 
+			- we must setup a stripe webhook in the next js as well so that whenever someone makes a purchase successfully,
+				- when a successfull purchase is detected we must reduce the bought quantity from the available quantity of the particular product.
+				- we must add the price of purchase in the "earning" field of the owner of the product.
+
