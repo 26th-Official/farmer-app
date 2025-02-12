@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,7 +23,7 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Plus, Pencil, Trash } from 'lucide-react';
+import { Plus, Pencil, Trash, PackageSearch, Loader2 } from 'lucide-react';
 
 const productSchema = z.object({
     name: z.string().min(1, 'Product name is required'),
@@ -47,6 +47,7 @@ interface Product {
 
 export default function DashboardPage() {
     const [products, setProducts] = useState<Product[]>([]);
+    const [isPending, startTransition] = useTransition();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const { user } = getSession();
@@ -61,7 +62,9 @@ export default function DashboardPage() {
     });
 
     useEffect(() => {
-        fetchProducts();
+        startTransition(() => {
+            fetchProducts();
+        });
     }, []);
 
     useEffect(() => {
@@ -76,9 +79,11 @@ export default function DashboardPage() {
 
     const fetchProducts = async () => {
         try {
-            const response = await fetch('/api/products?email=' + user);
-            const data = await response.json();
-            setProducts(data);
+            startTransition(async () => {
+                const response = await fetch('/api/products?email=' + user);
+                const data = await response.json();
+                setProducts(data);
+            });
         } catch (error) {
             console.error('Error fetching products:', error);
         }
@@ -209,39 +214,55 @@ export default function DashboardPage() {
                     </DialogContent>
                 </Dialog>
             </div>
+            {isPending ? (
+                <div className="flex justify-center py-20 items-center h-full">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : (
+                <>
+                    {products.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <PackageSearch className="h-16 w-16 text-primary opacity-50 mb-4" />
+                            <h4 className="font-semibold">No Products Available</h4>
+                            <p className="text-muted-foreground mt-2">There are currently no products listed in the marketplace.</p>
+                        </div>
+                    ) : (
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {products.map((product) => (
+                                <div
+                                    key={product.id}
+                                    className="rounded-lg border bg-card p-4 space-y-3"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-semibold">{product.name}</h3>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleEdit(product)}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDelete(product.id)}
+                                            >
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        <p>Quantity: {product.quantity} kg</p>
+                                        <p>Price: ₹{product.price}/kg</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
+            )}
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {products.map((product) => (
-                    <div
-                        key={product.id}
-                        className="rounded-lg border bg-card p-4 space-y-3"
-                    >
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-semibold">{product.name}</h3>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEdit(product)}
-                                >
-                                    <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDelete(product.id)}
-                                >
-                                    <Trash className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                            <p>Quantity: {product.quantity} kg</p>
-                            <p>Price: ₹{product.price}/kg</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
         </div>
     );
 } 

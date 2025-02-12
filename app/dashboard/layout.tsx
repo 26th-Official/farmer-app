@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { MessageSquare, Package, User, Menu, X, ChevronDown } from 'lucide-react';
+import { MessageSquare, Package, User, Menu, X, ChevronDown, Cloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,11 @@ const sidebarItems = [
         title: 'Products',
         icon: Package,
         href: '/dashboard',
+    },
+    {
+        title: 'Weather',
+        icon: Cloud,
+        href: '/dashboard/weather',
     },
     {
         title: 'Chat',
@@ -101,7 +106,7 @@ export default function DashboardLayout({
                                         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
                                         isActive
                                             ? 'bg-primary text-primary-foreground'
-                                            : 'hover:bg-muted'
+                                            : 'hover:bg-muted border-muted border'
                                     )}
                                 >
                                     <Icon className="h-4 w-4" />

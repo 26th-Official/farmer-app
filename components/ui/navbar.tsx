@@ -14,9 +14,22 @@ export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
-        const { isAuthenticated: authStatus, userType: type } = getSession();
-        setIsAuthenticated(authStatus);
-        setUserType(type || null);
+        // Function to update auth state
+        const updateAuthState = () => {
+            const { isAuthenticated: authStatus, userType: type } = getSession();
+            setIsAuthenticated(authStatus);
+            setUserType(type || null);
+        };
+
+        // Initial auth state
+        updateAuthState();
+
+        // Listen for auth changes
+        window.addEventListener('auth-change', updateAuthState);
+
+        return () => {
+            window.removeEventListener('auth-change', updateAuthState);
+        };
     }, []);
 
     const handleLogout = () => {
@@ -47,19 +60,19 @@ export function Navbar() {
 
                 {/* Desktop Navigation */}
                 <div className="hidden lg:flex items-center gap-4">
-                    <Link href="/" className="hover:text-primary">
+                    <Link href="/" className="hover:text-primary text-sm">
                         Home
                     </Link>
-                    <Link href="/marketplace" className="hover:text-primary">
+                    <Link href="/marketplace" className="hover:text-primary text-sm">
                         Marketplace
                     </Link>
                     {isAuthenticated && userType === 'Farmer' && (
-                        <Link href="/dashboard" className="hover:text-primary">
+                        <Link href="/dashboard" className="hover:text-primary text-sm">
                             Dashboard
                         </Link>
                     )}
                     {isAuthenticated && userType === 'Customer' && (
-                        <Link href="/profile" className="hover:text-primary">
+                        <Link href="/profile" className="hover:text-primary text-sm">
                             Profile
                         </Link>
                     )}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ShoppingCart, Loader2 } from 'lucide-react';
+import { ShoppingCart, Loader2, PackageSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -126,7 +126,7 @@ export default function MarketplacePage() {
     if (isLoading) {
         return (
             <div className="container py-12 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -149,9 +149,11 @@ export default function MarketplacePage() {
                     </p>
                 </div>
 
-                {products.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                        No products available at the moment.
+                {products.length !== 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <PackageSearch className="h-16 w-16 text-primary opacity-50 mb-4" />
+                        <h4 className="font-semibold">No Products Available</h4>
+                        <p className="text-muted-foreground mt-2">There are currently no products listed in the marketplace.</p>
                     </div>
                 ) : (
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
