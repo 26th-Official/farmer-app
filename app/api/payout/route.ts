@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { query } from '@/lib/db';
 
 export async function POST(request: Request) {
     try {
         const { email } = await request.json();
-
-        const db = await getDb();
         
         // Reset user's earnings to 0
-        await db.run(
-            'UPDATE users SET earning = 0 WHERE email = ?',
+        await query(
+            'UPDATE users SET earning = 0 WHERE email = $1',
             [email]
         );
 

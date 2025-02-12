@@ -1,17 +1,18 @@
-import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
+import { Pool } from 'pg';
 
-let db: Database | null = null;
+const pool = new Pool({
+    connectionString: process.env.POSTGRES_URL,
+    ssl: {
+        rejectUnauthorized: false // This allows self-signed certificates
+    }
+});
 
-export async function getDb() {
-    if (!db) {
-        db = await open({
-            filename: './farmer.db',
-            driver: sqlite3.Database
-        });
-
-        // Create users table if it doesn't exist
-        await db.exec(`
+// Initialize database tables
+export async function initDb() {
+    const client = await pool.connect();
+    try {
+        // Create users table
+        await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 email TEXT PRIMARY KEY,
                 password TEXT NOT NULL,
@@ -20,8 +21,8 @@ export async function getDb() {
             )
         `);
 
-        // Create products table if it doesn't exist
-        await db.exec(`
+        // Create products table
+        await client.query(`
             CREATE TABLE IF NOT EXISTS products (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -32,20 +33,46 @@ export async function getDb() {
             )
         `);
 
-        // Create purchases table if it doesn't exist
-        await db.exec(`
+        // Create purchases table
+        await client.query(`
             CREATE TABLE IF NOT EXISTS purchases (
                 id TEXT PRIMARY KEY,
+                product_id TEXT NOT NULL,
                 product_name TEXT NOT NULL,
                 buyer_email TEXT NOT NULL,
                 seller_email TEXT NOT NULL,
                 quantity INTEGER NOT NULL,
                 total_price INTEGER NOT NULL,
-                purchase_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (product_id) REFERENCES products(id),
                 FOREIGN KEY (buyer_email) REFERENCES users(email),
                 FOREIGN KEY (seller_email) REFERENCES users(email)
             )
         `);
+    } finally {
+        client.release();
     }
-    return db;
+}
+
+// Initialize database on first import
+initDb().catch(console.error);
+
+// Database query helper functions
+export async function query(text: string, params?: any[]) {
+    const client = await pool.connect();
+    try {
+        return await client.query(text, params);
+    } finally {
+        client.release();
+    }
+}
+
+export async function getOne(text: string, params?: any[]) {
+    const result = await query(text, params);
+    return result.rows[0];
+}
+
+export async function getMany(text: string, params?: any[]) {
+    const result = await query(text, params);
+    return result.rows;
 } 

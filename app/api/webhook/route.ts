@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getDb } from '@/lib/db';
+import { query, getOne } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -26,29 +26,27 @@ export async function POST(request: Request) {
             const { productId, quantity, sellerId } = session.metadata!;
             const buyerEmail = session.customer_details?.email;
 
-            const db = await getDb();
-
             // Get product details
-            const product = await db.get(
-                'SELECT name FROM products WHERE id = ?',
+            const product = await getOne(
+                'SELECT name FROM products WHERE id = $1',
                 [productId]
             );
 
             // Update product quantity
-            await db.run(
-                'UPDATE products SET quantity = quantity - ? WHERE id = ?',
+            await query(
+                'UPDATE products SET quantity = quantity - $1 WHERE id = $2',
                 [Number(quantity), productId]
             );
 
             // Update seller earnings
             const paymentAmount = session.amount_total! / 100; // Convert from paise to rupees
-            await db.run(
-                'UPDATE users SET earning = earning + ? WHERE email = ?',
+            await query(
+                'UPDATE users SET earning = earning + $1 WHERE email = $2',
                 [paymentAmount, sellerId]
             );
 
             // Create purchase record
-            await db.run(
+            await query(
                 `INSERT INTO purchases (
                     id,
                     product_id,
@@ -58,7 +56,7 @@ export async function POST(request: Request) {
                     quantity,
                     total_price,
                     purchase_date
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)`,
                 [
                     uuidv4(),
                     productId,

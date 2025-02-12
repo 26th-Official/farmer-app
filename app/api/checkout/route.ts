@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getDb } from '@/lib/db';
+import { getOne } from '@/lib/db';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-01-27.acacia',
@@ -11,9 +11,8 @@ export async function POST(request: Request) {
         const { productId, quantity, unitPrice } = await request.json();
 
         // Fetch product details
-        const db = await getDb();
-        const product = await db.get(
-            'SELECT * FROM products WHERE id = ?',
+        const product = await getOne(
+            'SELECT * FROM products WHERE id = $1',
             [productId]
         );
 

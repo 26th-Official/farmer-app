@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getOne, getMany } from '@/lib/db';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -10,16 +10,14 @@ export async function GET(request: Request) {
     }
 
     try {
-        const db = await getDb();
-
         // Get user details
-        const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+        const user = await getOne('SELECT * FROM users WHERE email = $1', [email]);
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Get purchase history and calculate total spent
-        const purchases = await db.all(`
+        // Get purchase history
+        const purchases = await getMany(`
             SELECT 
                 p.id,
                 p.product_name,
@@ -28,7 +26,7 @@ export async function GET(request: Request) {
                 p.total_price,
                 p.purchase_date
             FROM purchases p
-            WHERE p.buyer_email = ?
+            WHERE p.buyer_email = $1
             ORDER BY p.purchase_date DESC
         `, [email]);
 

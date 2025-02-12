@@ -1,22 +1,21 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { query, getMany } from '@/lib/db';
 
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const email = searchParams.get('email');
-        const db = await getDb();
 
         let products;
         if (email) {
             // If email is provided, get products for specific farmer
-            products = await db.all(
-                'SELECT * FROM products WHERE email = ?',
+            products = await getMany(
+                'SELECT * FROM products WHERE email = $1',
                 [email]
             );
         } else {
             // If no email, get all products for marketplace
-            products = await db.all('SELECT * FROM products WHERE quantity > 0');
+            products = await getMany('SELECT * FROM products WHERE quantity > 0');
         }
 
         return NextResponse.json(products || []);
@@ -32,10 +31,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const product = await request.json();
-        const db = await getDb();
 
-        await db.run(
-            'INSERT INTO products (id, name, quantity, price, email) VALUES (?, ?, ?, ?, ?)',
+        await query(
+            'INSERT INTO products (id, name, quantity, price, email) VALUES ($1, $2, $3, $4, $5)',
             [product.id, product.name, product.quantity, product.price, product.email]
         );
 
@@ -51,10 +49,9 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const product = await request.json();
-        const db = await getDb();
 
-        await db.run(
-            'UPDATE products SET name = ?, quantity = ?, price = ? WHERE id = ? AND email = ?',
+        await query(
+            'UPDATE products SET name = $1, quantity = $2, price = $3 WHERE id = $4 AND email = $5',
             [product.name, product.quantity, product.price, product.id, product.email]
         );
 
@@ -76,8 +73,7 @@ export async function DELETE(request: Request) {
     }
 
     try {
-        const db = await getDb();
-        await db.run('DELETE FROM products WHERE id = ?', [id]);
+        await query('DELETE FROM products WHERE id = $1', [id]);
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json(
