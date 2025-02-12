@@ -36,14 +36,12 @@ export async function getDb() {
         await db.exec(`
             CREATE TABLE IF NOT EXISTS purchases (
                 id TEXT PRIMARY KEY,
-                product_id TEXT NOT NULL,
                 product_name TEXT NOT NULL,
-                buyer_email TEXT,
+                buyer_email TEXT NOT NULL,
                 seller_email TEXT NOT NULL,
                 quantity INTEGER NOT NULL,
                 total_price INTEGER NOT NULL,
                 purchase_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (product_id) REFERENCES products(id),
                 FOREIGN KEY (buyer_email) REFERENCES users(email),
                 FOREIGN KEY (seller_email) REFERENCES users(email)
             )

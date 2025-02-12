@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getDb } from '@/lib/db';
+import { v4 as uuidv4 } from 'uuid';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-01-27.acacia',
@@ -23,8 +24,15 @@ export async function POST(request: Request) {
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object as Stripe.Checkout.Session;
             const { productId, quantity, sellerId } = session.metadata!;
+            const buyerEmail = session.customer_details?.email;
 
             const db = await getDb();
+
+            // Get product details
+            const product = await db.get(
+                'SELECT name FROM products WHERE id = ?',
+                [productId]
+            );
 
             // Update product quantity
             await db.run(
@@ -37,6 +45,29 @@ export async function POST(request: Request) {
             await db.run(
                 'UPDATE users SET earning = earning + ? WHERE email = ?',
                 [paymentAmount, sellerId]
+            );
+
+            // Create purchase record
+            await db.run(
+                `INSERT INTO purchases (
+                    id,
+                    product_id,
+                    product_name,
+                    buyer_email,
+                    seller_email,
+                    quantity,
+                    total_price,
+                    purchase_date
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+                [
+                    uuidv4(),
+                    productId,
+                    product.name,
+                    buyerEmail,
+                    sellerId,
+                    Number(quantity),
+                    paymentAmount
+                ]
             );
         }
 

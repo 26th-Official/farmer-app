@@ -58,6 +58,11 @@ export function Navbar() {
                             Dashboard
                         </Link>
                     )}
+                    {isAuthenticated && userType === 'Customer' && (
+                        <Link href="/profile" className="hover:text-primary">
+                            Profile
+                        </Link>
+                    )}
                 </div>
 
                 <div className="hidden lg:flex items-center gap-4">
@@ -102,6 +107,15 @@ export function Navbar() {
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     Dashboard
+                                </Link>
+                            )}
+                            {isAuthenticated && userType === 'Customer' && (
+                                <Link
+                                    href="/profile"
+                                    className="hover:text-primary"
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    Profile
                                 </Link>
                             )}
                             {isAuthenticated ? (

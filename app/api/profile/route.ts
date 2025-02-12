@@ -2,40 +2,44 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 
 export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
+
+    if (!email) {
+        return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
     try {
-        const { searchParams } = new URL(request.url);
-        const email = searchParams.get('email');
-
-        if (!email) {
-            return NextResponse.json(
-                { error: 'Email is required' },
-                { status: 400 }
-            );
-        }
-
         const db = await getDb();
-        
-        // Get user details and product count
-        const user = await db.get(
-            `SELECT u.*, COUNT(p.id) as productCount 
-             FROM users u 
-             LEFT JOIN products p ON u.email = p.email 
-             WHERE u.email = ? 
-             GROUP BY u.email`,
-            [email]
-        );
 
+        // Get user details
+        const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
         if (!user) {
-            return NextResponse.json(
-                { error: 'User not found' },
-                { status: 404 }
-            );
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
+
+        // Get purchase history and calculate total spent
+        const purchases = await db.all(`
+            SELECT 
+                p.id,
+                p.product_name,
+                p.seller_email,
+                p.quantity,
+                p.total_price,
+                p.purchase_date
+            FROM purchases p
+            WHERE p.buyer_email = ?
+            ORDER BY p.purchase_date DESC
+        `, [email]);
+
+        // Calculate total spent
+        const totalSpent = purchases.reduce((sum, purchase) => sum + purchase.total_price, 0);
 
         return NextResponse.json({
             email: user.email,
-            productCount: user.productCount || 0,
-            earning: user.earning || 0,
+            type: user.type,
+            purchases: purchases,
+            totalSpent: totalSpent
         });
     } catch (error) {
         console.error('Error fetching profile:', error);
