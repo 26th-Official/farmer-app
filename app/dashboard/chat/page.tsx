@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 const messageSchema = z.object({
     content: z.string().min(1, 'Message cannot be empty'),
@@ -27,7 +28,12 @@ interface Message {
 }
 
 export default function ChatPage() {
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<Message[]>([
+        {
+            role: 'assistant',
+            content: "👋 Hello! I'm your farming assistant. I can help you with questions about farming techniques, crop management, pest control, and more. How can I assist you today?"
+        }
+    ]);
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -102,10 +108,27 @@ export default function ChatPage() {
                                     : 'bg-muted'
                             )}
                         >
-                            {message.content}
+                            {message.role === 'assistant' ? (
+                                <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none">
+                                    {message.content}
+                                </ReactMarkdown>
+                            ) : (
+                                message.content
+                            )}
                         </div>
                     </div>
                 ))}
+                {isLoading && (
+                    <div className="flex w-full justify-start">
+                        <div className="bg-muted rounded-lg px-4 py-5 max-w-[80%]">
+                            <div className="flex items-center space-x-2">
+                                <div className="size-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                <div className="size-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                <div className="size-1 bg-primary rounded-full animate-bounce"></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
 
