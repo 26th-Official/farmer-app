@@ -113,7 +113,9 @@ export default function ChatPage() {
                                     {message.content}
                                 </ReactMarkdown>
                             ) : (
-                                message.content
+                                <ReactMarkdown className="prose prose-sm dark:prose-invert text-white max-w-none">
+                                    {message.content}
+                                </ReactMarkdown>
                             )}
                         </div>
                     </div>
