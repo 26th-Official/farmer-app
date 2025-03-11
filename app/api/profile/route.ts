@@ -16,29 +16,46 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Get purchase history
-        const purchases = await getMany(`
-            SELECT 
-                p.id,
-                p.product_name,
-                p.seller_email,
-                p.quantity,
-                p.total_price,
-                p.purchase_date
-            FROM purchases p
-            WHERE p.buyer_email = $1
-            ORDER BY p.purchase_date DESC
-        `, [email]);
+        if (user.type === 'Farmer') {
+            // Get products count and total earnings for farmer
+            const products = await getMany('SELECT * FROM products WHERE email = $1', [email]);
+            const sales = await getMany(`
+                SELECT SUM(total_price) as total_earnings
+                FROM purchases
+                WHERE seller_email = $1
+            `, [email]);
 
-        // Calculate total spent
-        const totalSpent = purchases.reduce((sum, purchase) => sum + purchase.total_price, 0);
+            return NextResponse.json({
+                email: user.email,
+                type: user.type,
+                productCount: products.length,
+                earning: sales[0]?.total_earnings || 0
+            });
+        } else {
+            // Get purchase history for customer
+            const purchases = await getMany(`
+                SELECT 
+                    p.id,
+                    p.product_name,
+                    p.seller_email,
+                    p.quantity,
+                    p.total_price,
+                    p.purchase_date
+                FROM purchases p
+                WHERE p.buyer_email = $1
+                ORDER BY p.purchase_date DESC
+            `, [email]);
 
-        return NextResponse.json({
-            email: user.email,
-            type: user.type,
-            purchases: purchases,
-            totalSpent: totalSpent
-        });
+            // Calculate total spent
+            const totalSpent = purchases.reduce((sum, purchase) => sum + purchase.total_price, 0);
+
+            return NextResponse.json({
+                email: user.email,
+                type: user.type,
+                purchases: purchases,
+                totalSpent: totalSpent
+            });
+        }
     } catch (error) {
         console.error('Error fetching profile:', error);
         return NextResponse.json(
