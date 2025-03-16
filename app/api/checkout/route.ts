@@ -32,7 +32,6 @@ export async function POST(request: Request) {
 
         const origin = request.headers.get('origin') || 'http://localhost:3000';
 
-        // Create Stripe checkout session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [
@@ -56,7 +55,9 @@ export async function POST(request: Request) {
                 quantity: quantity.toString(),
                 sellerId: product.email,
             },
+            billing_address_collection: 'required', // Collects billing address
         });
+        
 
         if (!session.url) {
             throw new Error('Failed to create checkout session URL');

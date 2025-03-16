@@ -29,9 +29,22 @@ export async function POST(request: Request) {
             const buyerName = session.customer_details?.name;
             const buyerAddress = session.customer_details?.address;
 
+            // Check if buyer exists in users table, if not create a new user
+            const existingUser = await getOne('SELECT email FROM users WHERE email = $1', [buyerEmail]);
+            if (!existingUser) {
+                // Generate a random password for the user (they can reset it later if needed)
+                const tempPassword = Math.random().toString(36).slice(-8);
+                
+                await query(
+                    `INSERT INTO users (email, password, type, earning) 
+                     VALUES ($1, $2, 'buyer', 0)`,
+                    [buyerEmail, tempPassword]
+                );
+            }
+
             // Get product details
             const product = await getOne(
-                'SELECT name, price FROM products WHERE id = $1',
+                'SELECT name FROM products WHERE id = $1',
                 [productId]
             );
 
